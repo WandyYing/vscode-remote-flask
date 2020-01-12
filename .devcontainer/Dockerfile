@@ -110,8 +110,13 @@ RUN CD_VERSION=$(if [ ${CHROME_DRIVER_VERSION:-latest} = "latest" ]; then echo $
   && sudo ln -fs /opt/selenium/chromedriver-$CD_VERSION /usr/bin/chromedriver
 
 # Install poetry
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-
+USER vscode
+# ENV PATH=${HOME}/.local/bin:${PATH}
+# curl has some issue with local user, "cannot found poetry"
+# RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3
+RUN pip3 install --user poetry
+# RUN PATH=${HOME}/.local/bin:${PATH}
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=dialog
+
