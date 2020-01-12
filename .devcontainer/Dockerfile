@@ -19,7 +19,7 @@ ARG USER_GID=$USER_UID
 # Uncomment the following COPY line and the corresponding lines in the `RUN` command if you wish to
 # include your requirements in the image itself. It is suggested that you only do this if your
 # requirements rarely (if ever) change.
-COPY requirements.txt /tmp/pip-tmp/
+# COPY requirements.txt /tmp/pip-tmp/
 
 # Chanage to aliyun mirrors
 # 更新apt-get源, aliyun 会导致apt-utils dialog的错误
@@ -42,8 +42,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get -y install --no-install-reco
     && pip --disable-pip-version-check --no-cache-dir install pylint \
     #
     # Update Python environment based on requirements.txt
-    && pip --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
-    && rm -rf /tmp/pip-tmp \
+    # && pip --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
+    # && rm -rf /tmp/pip-tmp \
     #
     # Create a non-root user to use if preferred - see https://aka.ms/vscode-remote/containers/non-root-user.
     && groupadd --gid $USER_GID $USERNAME \
@@ -110,12 +110,28 @@ RUN CD_VERSION=$(if [ ${CHROME_DRIVER_VERSION:-latest} = "latest" ]; then echo $
   && sudo ln -fs /opt/selenium/chromedriver-$CD_VERSION /usr/bin/chromedriver
 
 # Install poetry
-USER vscode
+# USER vscode
 # ENV PATH=${HOME}/.local/bin:${PATH}
 # curl has some issue with local user, "cannot found poetry"
-# RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3
-RUN pip3 install --user poetry
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3
+# RUN pip3 install poetry
+ENV PATH=/root/.poetry/bin/:$PATH
+# RUN pip3 install --user poetry
 # RUN PATH=${HOME}/.local/bin:${PATH}
+
+# if first run with blank project, run below in Terminal in VSCode.
+# poetry new ${your_project_name}
+# poetry install 
+# poetry add ${package}
+#
+# if has poetry project, execute below commad
+# create application directory
+USER vscode
+RUN sudo mkdir /app
+WORKDIR /app
+ONBUILD COPY pyproject.* .
+# install dependencies:
+ONBUILD RUN poetry install -n
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=dialog
